@@ -1,0 +1,24 @@
+{
+  "name": "pokedit3",
+  "version": "0.0.0",
+  "description": "A Pokémon (3rd generation) savegame editor library and web interface.",
+  "bin": "./bin/pokedit3.coffee",
+  "main": "./lib/index.coffee",
+  "scripts": {
+    "start": "coffee ./bin/pokedit3-web",
+    "cli": "coffee ./bin/pokedit3",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.org/alvaro-cuesta/pokedit3"
+  },
+  "dependencies": {
+    "express": "*",
+    "blade": "*",
+    "stylus": "*"
+  },
+  "keywords": ["pokemon", "pokedit", "pokémon", "savegame", "pokemon editor", "pokémon editor", "savegame editor"],
+  "author": "Álvaro Cuesta <alvaro-cuesta@GitHub>",
+  "license": "BSD"
+}
