@@ -37,6 +37,12 @@ Based heavily on information from:
   - http://bulbapedia.bulbagarden.net/wiki/Battle_Frontier_data_structures_in_Generation_III
 - Do not print pokerus/condition in FRLG
 - Web interface
+- Missing data
+- Advanced data
+  - http://furlocks-forest.net/wiki/?page=Battle_Tower_Data
+  - http://furlocks-forest.net/wiki/?page=Mossdeep_Trainer_Data
+  - http://furlocks-forest.net/wiki/?page=Secret_Base_Data
+  - http://furlocks-forest.net/wiki/?page=Mystery_Event_Data
 
 ## License
 
