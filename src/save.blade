@@ -1,0 +1,74 @@
+function formatItem(item)
+  li.item
+    span.qty #{item.qty}
+    span.name #{pokedit.items.NAMES[item.id]}
+
+function formatPokemon(pokemon)
+  li.pokemon
+    ul
+      li
+        span.name= pokemon.name
+      li
+        span.trainer
+          call formatTrainer(pokemon.trainer)
+          span.language #{pokedit.pokemon.LANGUAGES[pokemon.trainer.language]}
+
+function formatTrainer(trainer)
+  | #{trainer.name} (#{pad(trainer.id, 5)}#{trainer.gender === 'm' ? '♂' : '♀'})
+
+
+include 'layout.blade'
+
+render title(save.trainer.name + ' (Save ' + save.number + ', ' + pokedit.save.GAME_SHORTNAMES[save.game.code] + ')')
+
+append content
+  h1 #{pokedit.save.GAME_NAMES[save.game.code]}
+  h2
+    call formatTrainer(save.trainer)
+    |= ' - Save ' + save.number
+  ul
+    li= 'Money: '
+      |= save.bag.money
+    li= 'Time played: '
+      | #{save.time.hours}:#{save.time.minutes}:#{save.time.seconds}.#{save.time.frames}
+    li= 'Rival\'s name: '
+      |= save.rival.name
+  h3 Team
+  ol
+    foreach save.team as pokemon
+      call formatPokemon(pokemon)
+  h3 Items
+  ul
+    foreach save.bag.items as item
+      call formatItem(item)
+  h3 Key Items
+  ul
+    foreach save.bag.keyItems as item
+      call formatItem(item)
+  h4 TM/HM case
+  ul
+    foreach save.bag.machines as item
+      call formatItem(item)
+  h4 Berries
+  ul
+    foreach save.bag.berries as item
+      call formatItem(item)
+  h3 Balls
+  ul
+    foreach save.bag.balls as item
+      call formatItem(item)
+  h3 PC
+  h4 Your PC (objects)
+  ul
+    foreach save.pc.items as item
+      call formatItem(item)
+  h4 Bill's PC (pokémon, current box: #{save.pc.currentbox}
+  ol
+    foreach save.pc.boxes as box
+      li
+        ol
+          - for (i = 0; i < box.length; i++)
+            - if (box[i])
+              call formatPokemon(box[i])
+            - else
+              li.pokemon.empty
