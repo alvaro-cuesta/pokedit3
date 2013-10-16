@@ -1,0 +1,38 @@
+include 'layout'
+
+render title('Error ' + code)
+
+replace content
+  .page-header
+    h1 Error #{code}
+      <small.text-danger
+        - if (error.message.length > 50)
+          | #{error.message.split('').slice(0, 50).join('')}...
+        - else
+          | #{error.message}
+  .container.error
+    - if (production)
+      div.alert.alert-danger
+        i.icon-warning-sign.icon-4x.pull-right
+        p.lead
+          strong> Something blew up...
+          small and it might be our fault!
+        p If you're reading this message during normal usage of the application, there's a chance we've messed up.
+        p Head over to
+          <a>(href='https://github.com/alvaro-cuesta/pokedit3/issues') our tracker
+          | and file an issue including:
+        ul
+          li The error message, i.e.
+            <strong "#{error.message}".
+          li The current date and time, i.e.
+            <strong "#{(new Date()).toISOString()}"
+          li The URL, i.e.
+            <strong "
+              a(href=url) #{url}
+              | "
+          li Steps to reproduce your issue.
+          li What did you expect.
+          li What you got instead.
+    - else
+      h2 #{(typeof error.stack !== 'undefined') ? 'Stack trace' : 'Message'}:
+      pre= error.stack || error.message

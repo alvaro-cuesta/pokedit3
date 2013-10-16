@@ -16,7 +16,9 @@
   "dependencies": {
     "express": "*",
     "blade": "*",
-    "stylus": "*"
+    "stylus": "*",
+    "async": "*",
+    "connect-flash": "*"
   },
   "keywords": ["pokemon", "pokedit", "pokémon", "savegame", "pokemon editor", "pokémon editor", "savegame editor"],
   "author": "Álvaro Cuesta <alvaro-cuesta@GitHub>",

@@ -13,7 +13,7 @@ module.exports.readFile = readFile = (path, callback) ->
     callback (readSave i, data for i in [0...NUM_SAVES]), (readOther data)
 
 ## Savegame block reading ##
-SAVE_SIZE = 128 * 1024
+module.exports.SAVE_SIZE = SAVE_SIZE = 128 * 1024
 NUM_SAVES = 2
 BLOCKS_PER_SAVE = 14
 BLOCK_SIZE = 4096

@@ -1,0 +1,21 @@
+include 'layout'
+
+render title('Browse')
+
+replace content
+  .page-header
+    h1 Savegame browser
+  .container
+    - if (savegames.length)
+      p These are your uploaded savegames.
+        | Click to open.
+      ul
+        foreach savegames as save
+          li
+            - var url = '/save/' + save.hash
+            a(href=url)= save.name
+    -  else
+      p You must
+        <a>(href='/upload') upload a savegame
+        | first!
+      p Once your first savegame is uploaded, it will be available here.

@@ -43,6 +43,8 @@ Based heavily on information from:
   - http://furlocks-forest.net/wiki/?page=Mossdeep_Trainer_Data
   - http://furlocks-forest.net/wiki/?page=Secret_Base_Data
   - http://furlocks-forest.net/wiki/?page=Mystery_Event_Data
+- Redis session store
+- Content negotiation
 
 ## License
 

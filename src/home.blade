@@ -1,0 +1,22 @@
+include 'layout'
+
+render title()
+
+replace content
+  .jumbotron
+    .container
+      h1 Pokédit3
+      p A Pokémon (3rd generation) savegame editor
+        <a>(href='https://github.com/alvaro-cuesta/pokedit3') library
+        | and
+        <a(href='/') web interface
+        | .
+      p Upload your Pokémon GBA savegame (Ruby/Sapphire, FireRed/LeafGreen, Emerald) and:
+      small
+        ul
+          li View and edit your savegame data: name, gender, ID, time played...
+          li Edit your money, pokémon, objects...
+          li Edit pokémon moves, statistics, nicknames...
+          li Share your data with your friends, but keep edits and download private.
+      p
+        a.btn.btn-primary.btn-lg(href='/upload') Upload savegame

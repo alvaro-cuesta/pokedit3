@@ -1,0 +1,26 @@
+include 'layout'
+
+render title('Upload')
+
+replace content
+  .page-header
+    h1 Upload savegame
+  - if (typeof error !== 'undefined')
+    .container.error
+      div.alert.alert-danger
+        i>.icon-warning-sign.navicon
+        button.close(type='button', data-dismiss='alert', aria-hidden='true') &times;
+        strong> Error:
+        |= error
+  .container
+    form(action='/upload', method='POST', enctype='multipart/form-data', role='form')
+      .input-group
+        label(for='save') Savegame file:
+        input#save(type='file', name='save', accept='.sav')
+        input(type='hidden' name='MAX_FILE_SIZE' value=pokedit.SAVE_SIZE)
+        p.help-block
+          :nl2br
+            Upload your own GBA (Ruby/Sapphire, FireRed/LeafGreen, Emerald) savegame.
+            Make sure you're uploading the cartridge savegame, and not an emulator snapshot. Emulator save files are usually .sav extension.
+            Disable savegame compression if your emulator supports it! Compressed savegames won't work.
+      button.btn.btn-primary Submit
