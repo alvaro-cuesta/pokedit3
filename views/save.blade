@@ -1,0 +1,82 @@
+function itemList(list)
+  ul
+    foreach list as item
+      li.item
+        span.qty #{item.qty}
+        span.name #{pokedit.Items.NAMES[item.id]}
+
+function formatTrainer(trainer)
+  | #{trainer.name} (#{padLeft((trainer.id & 0xFFFF), 5)}#{trainer.gender === 0 ? '♂' : '♀'})
+
+
+include 'layout'
+
+render title(save.common.name + ' (Save ' + save.number + ', ' + pokedit.save.GAME_SHORTNAMES[save.common.code] + ')')
+
+replace content
+  .page-header
+    h1
+      call formatTrainer(save.common)
+      |  - Save #{save.number} [#{pokedit.save.GAME_NAMES[save.common.code]}]
+
+  .container.error
+    foreach warnings as warning
+      div.alert.alert-warning
+        button.close(type='button', data-dismiss='alert', aria-hidden='true') &times;
+        i>.icon-warning-sign.navicon.icon-large
+        strong> Warning:
+        |= warning
+    foreach infos as info
+      div.alert.alert-success
+        button.close(type='button', data-dismiss='alert', aria-hidden='true') &times;
+        i>.icon-info.navicon.icon-large
+        strong> Upload sucessfull!
+        |= info
+
+  ul.nav.nav-pills
+    li.active
+      a(href='#trainer', data-toggle='tab') Trainer
+    li
+      a(href='#bag', data-toggle='tab') Bag
+    li
+      a(href='#pc', data-toggle='tab') PC
+    li.pull-right
+      a Testing.
+
+  .tab-content
+    #trainer.tab-pane.active
+      .row
+        .col-md-3
+          h2 Trainer
+          ul
+            li Money: #{save.team_items.money}
+            li Time played: #{save.common.time.hours}:#{save.common.time.minutes}:#{save.common.time.seconds}.#{save.common.time.frames}
+            li Rival's name: #{save.rival.name}
+        .col-md-9
+          h2 Team
+          ol
+            foreach save.team_items.team as pokemon
+              include 'pokemon' exposing pokemon, padLeft, pokedit
+    #bag.tab-pane
+      h2 Items
+      call itemList(save.team_items.pocket)
+      h3 Key Items
+      call itemList(save.team_items.key)
+      h4 TM/HM case
+      ul
+      call itemList(save.team_items.tmhm)
+      h4 Berries
+      call itemList(save.team_items.berry)
+      h3 Balls
+      call itemList(save.team_items.ball)
+    #pc.tab-pane
+      h2 Your PC (objects)
+      call itemList(save.team_items.pc)
+      h2 Bill's PC (pokémon, current box: #{save.pc.current})
+      ol
+        foreach save.pc.boxes as box
+          li
+            ol
+              - for (i = 0; i < box.length; i++)
+                - var pokemon = box[i]
+                  include 'pokemon' exposing pokemon, padLeft, pokedit

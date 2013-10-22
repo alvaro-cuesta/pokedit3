@@ -11,9 +11,17 @@ replace content
         | Click to open.
       ul
         foreach savegames as save
-          li
+          li.savegame
             - var url = '/save/' + save.hash
-            a(href=url)= save.name
+            - var download = url + '/download?' + save.name.replace('/', '-') + '.sav'
+            - var edit = url + '/edit'
+            a>(href=url)= save.name
+            span.extended
+              | -
+              <a(href=edit)
+                i.icon-edit
+              <a(href=download)
+                i.icon-download-alt
     -  else
       p You must
         <a>(href='/upload') upload a savegame

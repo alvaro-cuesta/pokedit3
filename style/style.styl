@@ -1,0 +1,57 @@
+vendor(prop, args)
+  -webkit-{prop} args
+  -moz-{prop} args
+  {prop} args
+
+animation()
+  vendor(animation, arguments)
+
+transition()
+  vendor(transition, arguments)
+
+opacity(n)
+  opacity n
+  filter unquote('progid:DXImageTransform.Microsoft.Alpha(Opacity=' + round(n * 100) + ')')
+
+/* CONSTANTS */
+BLUE = #428bca
+LIGHTBLUE = #72bbfa
+DARKGREY = #777
+RED = #c33
+WHITE = #fff
+BLACK = #000
+
+body
+  padding-top 30px
+
+// Vertical spacers
+for space in 5 10 15 20 25 30 35 40 45 50 100
+  .spacer{space}
+    height 10px * space
+    width 100%
+    font-size 0
+    margin 0
+    padding 0
+    border 0
+    display block
+
+// Error panel
+.container
+  .error
+    width 80%
+    min-width 320px
+    &:empty
+      display none
+
+// Hidden controls in savegame list
+.savegame
+  .extended
+    opacity 0.1
+    transition opacity 0.5s
+    &:hover
+      opacity 1.0
+a:hover + .extended
+  opacity 1.0
+
+@import 'navbar'
+@import 'save'

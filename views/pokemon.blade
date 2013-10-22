@@ -1,0 +1,12 @@
+- if (pokemon)
+  li.pokemon
+    ul
+      li
+        span.name= pokemon.name
+      li
+        span.trainer
+          | #{pokemon.otName} (#{padLeft((pokemon.otId & 0xFFFF), 5)}#{'m' === 'm' ? '♂' : '♀'})
+          span.language #{pokedit.Pokemon.LANGUAGES[pokemon.language]}
+      |= JSON.stringify(pokemon)
+- else
+  li.pokemon.empty

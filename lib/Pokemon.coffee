@@ -1,12 +1,125 @@
-checksum = require './checksum'
-util = require './util'
-items = require './items'
+util = undefined
+PokemonString = require "#{__dirname}/String"
+Items = require "#{__dirname}/Items"
+{UInt8, UInt16LE, UInt32LE, Obj, ArrayOf, Slice, Filter, Wrap, Transform, Pass} = require "#{__dirname}/byte-spec"
 
-POKEMON_DATA_SIZE = 48
+checksum = (buffer) ->
+  sum = 0
+  (sum += buffer.readUInt16LE i) for i in [0...buffer.length] by 2
+  sum &= 0xFFFF
+  sum
 
-module.exports.LANGUAGES = LANGUAGES = ['JP', 'EN', 'FR', 'IT', 'DE', undefined, 'ES']
+G = growth: Obj [
+  {species: UInt16LE}
+  {item: UInt16LE}
+  {experience: UInt32LE}
+  {ppBonus: UInt8} # TODO: BITS!
+  {friendship: UInt8}
+  {unknown0: UInt16LE}
+]
 
-module.exports.parse = (buffer, extended) ->
+A = moves: Obj [
+  {moves: ArrayOf 4, UInt16LE}
+  {pp: ArrayOf 4, UInt8}
+]
+
+E = evCondition: Obj [
+  {hp: UInt8}
+  {attack: UInt8}
+  {defense: UInt8}
+  {speed: UInt8}
+  {spAttack: UInt8}
+  {spDefense: UInt8}
+  {coolness: UInt8}
+  {beauty: UInt8}
+  {cuteness: UInt8}
+  {smartness: UInt8}
+  {toughness: UInt8}
+  {feel: UInt8}
+]
+
+M = misc: Obj [
+  {pokerus: UInt8}
+  {metLocation: UInt8}
+  {origins: UInt16LE} # TODO: BITS!
+  {ivs: UInt32LE} # TODO: BITS!
+  {ribbons: UInt32LE} # TODO: WHAT?
+]
+
+SPEC_POKEMON_DATA = [
+  Obj [G, A, E, M]
+  Obj [G, A, M, E]
+  Obj [G, E, A, M]
+  Obj [G, E, M, A]
+  Obj [G, M, A, E]
+  Obj [G, M, E, A]
+  Obj [A, G, E, M]
+  Obj [A, G, M, E]
+  Obj [A, E, G, M]
+  Obj [A, E, M, G]
+  Obj [A, M, G, E]
+  Obj [A, M, E, G]
+  Obj [E, G, A, M]
+  Obj [E, G, M, A]
+  Obj [E, A, G, M]
+  Obj [E, A, M, G]
+  Obj [E, M, G, A]
+  Obj [E, M, A, G]
+  Obj [M, G, A, E]
+  Obj [M, G, E, A]
+  Obj [M, A, G, E]
+  Obj [M, A, E, G]
+  Obj [M, E, G, A]
+  Obj [M, E, A, G]
+]
+
+POKEMON_DATA_LENGTH = 48
+
+SpecPokemon = ->
+  wrap = new Wrap()
+  [
+    {personality: wrap.capture UInt32LE}
+    {otId: wrap.capture UInt32LE}
+    {nickname: PokemonString 10}
+    {language: UInt16LE}
+    {otName: PokemonString 7}
+    {mark: UInt8} # TODO: BITS!
+    {checksum: UInt16LE}
+    {unknown0: UInt16LE}
+    {data: wrap.emit (c) ->
+      [otId, personality] = [c.pop(), c.pop()]
+      order = personality % 24
+      key = otId ^ personality
+
+      Pass SPEC_POKEMON_DATA[order],
+        Transform (Slice POKEMON_DATA_LENGTH), (v) ->
+          data = new Buffer POKEMON_DATA_LENGTH
+          for i in [0...POKEMON_DATA_LENGTH] by 4
+            data.writeInt32LE (key ^ v.readUInt32LE i), i
+          data
+    }
+  ]
+
+SPEC_EXTENDED = [
+  {status: UInt32LE} # TODO: BITS!
+  {level: UInt8}
+  {pokerus: UInt8}
+  {hp: UInt16LE}
+  {maxHp: UInt16LE}
+  {attack: UInt16LE}
+  {defense: UInt16LE}
+  {speed: UInt16LE}
+  {spAttack: UInt16LE}
+  {spDefense: UInt16LE}
+]
+
+module.exports = (extended) ->
+  Obj if extended
+      SpecPokemon().concat SPEC_EXTENDED
+    else
+      SpecPokemon()
+
+module.exports.parseOLD = (buffer, extended) ->
   readChecksum = buffer.readUInt16LE 0x1C
   trainerId = buffer.readUInt32LE 0x04
   personality = buffer.readUInt32LE 0x00
@@ -66,11 +179,7 @@ module.exports.parse = (buffer, extended) ->
 
   result
 
-SUBSTRUCTURE_LENGTH = 12
-A = 0
-E = 1
-G = 2
-M = 3
+
 
 parseData = (buffer, personality, pokemonRSE) ->
   dataOrder = POKEMON_DATA_ORDER[personality % 24]
@@ -118,35 +227,9 @@ parseData = (buffer, personality, pokemonRSE) ->
     iv: 0
     ribbons: 0
 
-module.exports.POKEMON_DATA_ORDER = POKEMON_DATA_ORDER = [
-  #A  E  G  M
-  [1, 2, 0, 3]  # GAEM
-  [1, 3, 0, 2]  # GAME
-  [2, 1, 0, 3]  # GEAM
-  [3, 1, 0, 2]  # GEMA
-  [2, 3, 0, 1]  # GMAE
-  [3, 2, 0, 1]  # GMEA
-  [0, 2, 1, 3]  # AGEM
-  [0, 3, 1, 2]  # AGME
-  [0, 1, 2, 3]  # AEGM
-  [0, 1, 3, 2]  # AEMG
-  [0, 3, 2, 1]  # AMGE
-  [0, 2, 3, 1]  # AMEG
-  [2, 0, 1, 3]  # EGAM
-  [3, 0, 1, 2]  # EGMA
-  [1, 0, 2, 3]  # EAGM
-  [1, 0, 3, 2]  # EAMG
-  [3, 0, 2, 1]  # EMGA
-  [2, 0, 3, 1]  # EMAG
-  [2, 3, 1, 0]  # MGAE
-  [3, 2, 1, 0]  # MGEA
-  [1, 3, 2, 0]  # MAGE
-  [1, 2, 3, 0]  # MAEG
-  [3, 1, 2, 0]  # MEGA
-  [2, 1, 3, 0]  # MEAG
-]
+module.exports.LANGUAGES = ['JP', 'EN', 'FR', 'IT', 'DE', undefined, 'ES']
 
-module.exports.SPECIES = SPECIES = [
+module.exports.SPECIES = [
   undefined
   'Bulbasaur'
   'Ivysaur'
@@ -589,7 +672,7 @@ module.exports.SPECIES = SPECIES = [
   'Unown'
 ]
 
-module.exports.MOVES = MOVES = [
+module.exports.MOVES = [
   undefined
   'Pound'
   'Karate Chop'
@@ -947,7 +1030,7 @@ module.exports.MOVES = MOVES = [
   'Psycho Boost'
 ]
 
-module.exports.NATURES = NATURES = [
+module.exports.NATURES = [
   'Hardy (=)'
   'Lonely (+Atk-Def)'
   'Brave (+Atk-Spe)'

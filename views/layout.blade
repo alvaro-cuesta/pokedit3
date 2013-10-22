@@ -24,30 +24,21 @@ html(lang='en')
         nav.collapse.navbar-collapse
           ul.nav.navbar-nav
             - if (typeof active === 'undefined') active = null
-            - var homeClass = (active === 'home') ? 'active' : ''
-            li(class=homeClass)
-              a(href='/')
-                i>.icon-home.icon-large.navicon
-                | Home
-            - if (savegames.length)
-              - var browseClass = (active === 'save') ? 'active' : ''
-              li(class=browseClass)
-                a(href='/save')
-                  i>.icon-folder-open.navicon
-                  | Browse
             - var uploadClass = (active === 'upload') ? 'active' : (!savegames.length) ? 'flash' : ''
             li(class=uploadClass)
               a(href='/upload')
                 i>.icon-upload-alt.icon-large.navicon
                 | Upload
-            - var helpClass = (active === 'help') ? 'active' : ''
-            li(class=helpClass)
-              a(href='/help')
-                i>.icon-question.icon-large.navicon
-                | Help
-          ul.nav.navbar-nav.pull-right
+            - if (savegames.length)
+              - var browseClass = (active === 'browse') ? 'active' : ''
+              li(class=browseClass)
+                a(href='/save')
+                  i>.icon-folder-open.navicon
+                  | Browse
+                  <span.badge= savegames.length
+          ul.nav.navbar-nav.navbar-right
             li
-              a.blue(href='https://github.com/alvaro-cuesta/pokedit3', target='_blank')
+              a.github(href='https://github.com/alvaro-cuesta/pokedit3', target='_blank')
                 i>.icon-github.icon-large.navicon
                 | Fork on GitHub!
     .container

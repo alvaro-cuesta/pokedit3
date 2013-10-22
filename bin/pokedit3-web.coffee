@@ -7,34 +7,38 @@ express = require 'express'
 fs = require 'fs'
 
 PORT = process.env.POKEDIT3_PORT or 1337
-SRC = "#{__dirname}/../src"
 PUB = "#{__dirname}/../static"
 DEV = process.env.NODE_ENV == 'development'
 TMP = "#{process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp' || process.cwd()}/pokedit3saves"
 
 
 
+## Utilities ##
+padLeft = (n, padding, char = '0') ->
+  nStr = n.toString()
+  out = ''
+  (out += char) for i in [0...(padding - nStr.length)]
+  out + nStr
+
+
+
 ## Express.js setup ##
 app = express()
 require 'blade'
-app.set 'views', SRC
+app.set 'views', "#{__dirname}/../views/"
 app.set 'view engine', 'blade'
 app.locals {
   JSON: JSON
   pokedit: pokedit
-  padLeft: (n, padding, char = '0') ->
-    nStr = n.toString()
-    out = ''
-    (out += char) for i in [0...(padding - nStr.length)]
-    out + nStr
+  padLeft: padLeft
 }
 
 # Middleware
 app.use express.compress()
-app.use express.favicon "#{SRC}/favicon.ico"
+app.use express.favicon "#{__dirname}/../favicon.ico"
 app.use express.logger if DEV then 'dev'
 app.use (require 'stylus').middleware {
-  src: SRC
+  src: "#{__dirname}/../style"
   dest: PUB
   compress: not DEV
   firebug: DEV
@@ -68,14 +72,16 @@ app.post '/upload', (req, res, next) ->
     res.render 'upload', active: 'upload'
     return
 
-  if req.files.save.size != pokedit.SAVE_SIZE
+  if req.files.save.size != pokedit.file.SIZE_FILE
     res.status 400
     res.render 'upload',
       active: 'upload'
-      error: "Bad file size (#{req.files.save.size} bytes, expected #{pokedit.SAVE_SIZE})."
+      error: "Bad file size (#{req.files.save.size} bytes, expected #{pokedit.file.SIZE_FILE})."
     return
 
-  pokedit.readFile req.files.save.path, (saves, other) ->
+  fs.readFile req.files.save.path, (err, buffer) ->
+    {saves, unknown} = pokedit.file buffer
+
     if not saves[0]? and not saves[1]?
       res.status 400
       res.render 'upload',
@@ -102,7 +108,6 @@ app.post '/upload', (req, res, next) ->
 
     save = pokedit.save.parse saves[num]
 
-    delete save.buffers
     saves = null
 
     async.parallel [
@@ -110,8 +115,9 @@ app.post '/upload', (req, res, next) ->
       (c) -> fs.writeFile "#{TMP}/#{req.files.save.hash}.json", (JSON.stringify save), c
     ], (err, _) ->
       return next err if err?
+      console.log save
       data =
-        name: req.files.save.hash
+        name: "[#{padLeft (save.common.id & 0xFFFF), 5, '0'}-#{save.number}] #{save.common.name} (#{pokedit.save.GAME_SHORTNAMES[save.common.code]})"
         hash: req.files.save.hash
       if not req.session.savegames?
         req.session.savegames = []
@@ -120,20 +126,34 @@ app.post '/upload', (req, res, next) ->
 
 # Save visualization
 app.get '/save', (req, res) ->
-  res.render 'save_list'
+  res.format
+    text: ->
+      res.send res.locals.savegames
+    html: ->
+      res.render 'browse', active: 'browse'
+    json: ->
+      res.send res.locals.savegames
+
+app.get '/save/:hash/download', (req, res, next) ->
+  res.download "#{TMP}/#{req.params.hash}.sav", decodeURIComponent req._parsedUrl.query
 
 app.get '/save/:hash', (req, res, next) ->
   fs.readFile "#{TMP}/#{req.params.hash}.json",
-    encoding: 'utf8',
+    encoding: 'utf-8',
     (err, data) ->
       if err?
         res.status 404
         return next err
-      res.render 'save',
-        save: JSON.parse data
-        warnings: req.flash 'warning'
-        infos: req.flash 'info'
-
+      res.format
+        text: ->
+          res.send data
+        html: ->
+          res.render 'save',
+            save: JSON.parse data
+            warnings: req.flash 'warning'
+            infos: req.flash 'info'
+        json: ->
+          res.send data
 # Catchall generic route
 app.get '/:page?', (req, res) ->
   page = req.params.page ? 'home'

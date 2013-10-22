@@ -1,0 +1,35 @@
+// Icons
+.navicon
+  margin-right 7px
+
+// Upload count
+.navbar-nav
+  .badge
+    margin-left 7px
+  > li.active .badge
+    color BLACK
+    background-color WHITE
+  > li > a:hover > .badge
+    background-color LIGHTBLUE
+
+// Hover effects
+.navbar-header .navbar-toggle .icon-bar
+.navbar-header .navbar-brand:hover
+.navbar-nav > li > a:hover > .navicon
+  color: LIGHTBLUE !important
+
+// First-time upload flash
+@keyframes flash
+  from
+    color DARKGREY
+  to
+    color RED
+
+.flash > a > .navicon
+  animation flash 1s ease-in-out infinite alternate
+
+// GitHub
+.github
+  color BLUE !important
+  &:focus, &:hover
+    color WHITE !important

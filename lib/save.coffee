@@ -1,116 +1,161 @@
-util = require './util'
-pokemon = require './pokemon'
-items = require './items'
+PokemonString = require "#{__dirname}/String"
+Pokemon = require "#{__dirname}/Pokemon"
+Items = require "#{__dirname}/Items"
+{UInt8, UInt16LE, UInt32LE, Obj, Slice, Wrap, ArrayOf, Transform, Filter, Map} = require "#{__dirname}/byte-spec"
 
-POKEMON_SIZE = 100
-POKEMON_SIZE_BOXED = 80
 VERSION_RS = 0
 VERSION_FRLG = 1
 VERSION_E = 2
 
-module.exports.GAME_NAMES = ['Ruby/Sapphire', 'FireRed/LeafGreen', 'Emerald']
-module.exports.GAME_SHORTNAMES = ['RS', 'FR/LG', 'E']
+TEAM_SIZE = 6
+NUM_BOXES = 14
+POKEMON_PER_BOX = 30
 
-module.exports.parse = (save) ->
-  {number, trainer, teamAndItems, unknown0, unknown1, rival, pc} = save
+SIZE_EXTENDED_POKEMON = 100
 
-  gameCode = trainer.readUInt32LE 0x00AC
-  securityKey = 0
-  if gameCode > 1
-    securityKey = gameCode
-    gameCode = 2
-  else if gameCode == 1
-    securityKey = trainer.readUInt32LE 0x0AF8
+SPEC_TIME = Obj [
+  {hours: UInt16LE}
+  {minutes: UInt8}
+  {seconds: UInt8}
+  {frames: UInt8}
+]
+
+SPEC_TRAINER_COMMON = Obj [
+  {name: PokemonString 8}
+  {gender: UInt8}
+  {unknown0: UInt8}
+  {id: UInt32LE}
+  {time: SPEC_TIME}
+  {unknown1: Slice 0x99}
+  {code: UInt32LE}
+]
+
+SPEC_TRAINER_VERSION = [
+  Obj [
+    {unknown2: Slice()}
+  ]
+  Obj [
+    {unknown2: Slice 0xA48}
+    {key: UInt32LE}
+    {unknown3: Slice()}
+  ]
+  Obj [
+    {unknown2: Slice()}
+  ]
+]
+
+SpecTeamItems = (key) ->
+  wrap = new Wrap()
+  [
+    Obj [
+      {unknown0: Slice 0x0234}
+      {size: wrap.capture UInt32LE}
+      {team: wrap.emit (c) -> ArrayOf c[0], Pokemon true}
+      {padding: wrap.emit (c) -> Slice SIZE_EXTENDED_POKEMON * (TEAM_SIZE - c.pop())}
+      {money: Transform UInt32LE, (v) -> v ^ key}
+      {unknown1: UInt32LE}
+      {pc: Items 50, key}
+      {pocket: Items 20, key}
+      {key: Items 20, key}
+      {ball: Items 16, key}
+      {tmhm: Items 64, key}
+      {berry: Items 46, key}
+      {unknown2: Slice()}
+    ]
+    Obj [
+      {unknown0: Slice 0x0034}
+      {size: wrap.capture UInt32LE}
+      {team: wrap.emit (c) -> ArrayOf c[0], Pokemon true}
+      {padding: wrap.emit (c) -> Slice SIZE_EXTENDED_POKEMON * (TEAM_SIZE - c.pop())}
+      {money: Transform UInt32LE, (v) -> v ^ key}
+      {unknown1: UInt32LE}
+      {pc: Items 30}
+      {pocket: Items 42, key}
+      {key: Items 30, key}
+      {ball: Items 13, key}
+      {tmhm: Items 58, key}
+      {berry: Items 43, key}
+      {unknown2: Slice()}
+    ]
+    Obj [
+      {unknown0: Slice 0x0234}
+      {size: wrap.capture UInt32LE}
+      {team: wrap.emit (c) -> ArrayOf c[0], Pokemon true}
+      {padding: wrap.emit (c) -> Slice SIZE_EXTENDED_POKEMON * (TEAM_SIZE - c.pop())}
+      {money: Transform UInt32LE, (v) -> v ^ key}
+      {unknown1: UInt32LE}
+      {pc: Items 50, key}
+      {pocket: Items 30, key}
+      {key: Items 30, key}
+      {ball: Items 16, key}
+      {tmhm: Items 64, key}
+      {berry: Items 46, key}
+      {unknown2: Slice()}
+    ]
+  ]
+
+SPEC_RIVAL = Obj [
+  {unknown0: Slice 0x0BCC}
+  {name: PokemonString 8}
+  {unknown1: Slice()}
+]
+
+SPEC_PC = Obj [
+  {current: UInt32LE}
+  {boxes: ArrayOf NUM_BOXES, Map ((v) -> if v.personality != 0 then v),
+    (ArrayOf POKEMON_PER_BOX, Pokemon false)}
+  {unknown0: Slice()}
+]
+
+module.exports.parse = (save, options) ->
+  options ?= {}
+  options.checks ?= true
+  options.thorough ?= false
+
+  {number, trainer, team_items, rival, pc} = save
+  common = SPEC_TRAINER_COMMON.read trainer
+  code = Math.min common.value.code, 2
+
+  version = SPEC_TRAINER_VERSION[code].read trainer, common.bytesRead
+  key = version.value.key ? common.value.code
+
+  team_items_val = SpecTeamItems(key)[code].read team_items
+  rival = SPEC_RIVAL.read rival
+  pc = SPEC_PC.read pc
 
   result =
-    game:
-      code: gameCode
-      key: securityKey
     number: number
-    trainer:
-      name: util.decodeString trainer, 0x0000, 8
-      gender: if trainer[0x08] == 0 then 'm' else 'f'
-      id: trainer.readUInt16LE 0x000A
-      fullId: trainer.readUInt32LE 0x000A
-    time:
-      hours: trainer.readUInt16LE 0x000E
-      minutes: trainer.readUInt8 0x0010
-      seconds: trainer.readUInt8 0x0011
-      frames: trainer.readUInt8 0x0012
-    team: (parseTeam teamAndItems, gameCode, true)
-    bag:
-      money: securityKey ^ teamAndItems.readUInt32LE (if gameCode == VERSION_FRLG then 0x0290 else 0x0490)
-      items: (items.parse teamAndItems, securityKey & 0xFFFF,
-        if gameCode == VERSION_FRLG then 0x0310 else 0x0560,
-        (switch gameCode
-          when VERSION_RS then 20
-          when VERSION_FRLG then 42
-          when VERSION_E then 30))
-      keyItems: (items.parse teamAndItems, securityKey & 0xFFFF,
-        (switch gameCode
-          when VERSION_RS then 0x5B0
-          when VERSION_FRLG then 0x3B8
-          when VERSION_E then 0x5D8),
-        if gameCode == VERSION_RS then 20 else 30)
-      balls: (items.parse teamAndItems, securityKey & 0xFFFF,
-        (switch gameCode
-          when VERSION_RS then 0x600
-          when VERSION_FRLG then 0x430
-          when VERSION_E then 0x650),
-        if gameCode == VERSION_FRLG then 13 else 16)
-      machines: (items.parse teamAndItems, securityKey & 0xFFFF,
-        (switch gameCode
-          when VERSION_RS then 0x640
-          when VERSION_FRLG then 0x464
-          when VERSION_E then 0x690),
-        if gameCode == VERSION_FRLG then 58 else 64)
-      berries: (items.parse teamAndItems, securityKey & 0xFFFF,
-        (switch gameCode
-          when VERSION_RS then 0x740
-          when VERSION_FRLG then 0x54C
-          when VERSION_E then 0x790),
-        if gameCode == VERSION_FRLG then 43 else 46)
+    common: common.value
+    version: version.value
+    team_items: team_items_val.value
+    pc: pc.value
+    # game:
+    #   code: code
+    #   key: key
+    # trainer:
+    #   name: common.value.name
+    #   gender: common.value.gender
+    #   id: common.value.id & 0xFFFF
+    #   fullId: common.value.id
+    # time: common.value.time
+    # team: team_items_val.value.team
+    # bag:
+    #   money: team_items_val.value.money
+    #   items: team_items_val.value.pocket
+    #   keyItems: team_items_val.value.key
+    #   balls: team_items_val.value.ball
+    #   machines: team_items_val.value.tmhm
+    #   berries: team_items_val.value.berry
+    # pc:
+    #   currentBox: pc.value.current
+    #   boxes: pc.value.boxes
+    #   items: team_items_val.value.pc
 
-  result.pc = parseBoxes pc, gameCode
-  result.pc.items = items.parse teamAndItems, 0,
-    if gameCode == VERSION_FRLG then 0x0298 else 0x0498,
-    if gameCode == VERSION_FRLG then 30 else 50
-
-  if gameCode == VERSION_FRLG
-    result.rival = name: util.decodeString rival, 0x0BCC, 8
-   result.buffers =
-    trainer: trainer
-    teamAndItems: teamAndItems
-    unknown0: unknown0
-    unknown1: unknown1
-    rival: rival
-    pc: pc
+  if code == VERSION_FRLG
+    result.rival = rival.value
+    #result.rival = name: rival.value.name
 
   result
 
-# Pokémon team parsing
-parseTeam = (buffer, gameCode) ->
-  offset = if gameCode == 1 then 0x0038 else 0x0238
-
-  for i in [0...buffer.readUInt32LE offset - 4]
-    pokemonBuffer = buffer.slice \
-      offset + i * POKEMON_SIZE,
-      offset + (i+1) * POKEMON_SIZE
-    pokemon.parse pokemonBuffer, true
-
-# PC boxes parsing
-parseBoxes = do ->
-  PC_BOXES = 14
-  POKEMON_PER_PC_BOX = 30
-
-  (buffer, gameCode) ->
-    offset = if gameCode == VERSION_FRLG then 0x0038 else 0x0238
-
-    currentBox: buffer.readUInt32LE 0x00
-    boxes: for box in [0...PC_BOXES]
-      boxOffset = 0x04 + box * POKEMON_PER_PC_BOX * POKEMON_SIZE_BOXED
-      for i in [0...POKEMON_PER_PC_BOX]
-        pokemonBuffer = buffer.slice \
-          boxOffset + i * POKEMON_SIZE_BOXED,
-          boxOffset + (i+1) * POKEMON_SIZE_BOXED
-        pokemon.parse pokemonBuffer
+module.exports.GAME_NAMES = ['Ruby/Sapphire', 'FireRed/LeafGreen', 'Emerald']
+module.exports.GAME_SHORTNAMES = ['RS', 'FR/LG', 'E']

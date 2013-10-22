@@ -1,9 +1,13 @@
 #!/usr/bin/env coffee
 
+fs = require 'fs'
 pokedit = require "#{__dirname}/../lib/"
-json2html = require 'node-json2html'
 
-pokedit.readFile "#{__dirname}/../save.sav", (saves, other) ->
+fs.readFile "#{__dirname}/../save.sav", (err, buffer) ->
+  throw err if err?
+
+  {saves} = pokedit.file buffer
+
   if not saves[0]? and not saves[1]?
     console.log 'Corrupt or invalid save file.'
     return

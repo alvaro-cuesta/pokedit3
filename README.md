@@ -45,6 +45,7 @@ Based heavily on information from:
   - http://furlocks-forest.net/wiki/?page=Mystery_Event_Data
 - Redis session store
 - Content negotiation
+- When GETting completely random URLs, run error handlers too
 
 ## License
 

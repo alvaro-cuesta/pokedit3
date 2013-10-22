@@ -2,11 +2,11 @@
   "name": "pokedit3",
   "version": "0.0.0",
   "description": "A Pokémon (3rd generation) savegame editor library and web interface.",
-  "bin": "./bin/pokedit3.coffee",
+  "bin": "./bin/pokedit3-web.coffee",
   "main": "./lib/index.coffee",
   "scripts": {
-    "start": "coffee ./bin/pokedit3-web",
-    "cli": "coffee ./bin/pokedit3",
+    "start": "coffee ./bin/pokedit3-web.coffee",
+    "cli": "coffee ./bin/pokedit3.coffee",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

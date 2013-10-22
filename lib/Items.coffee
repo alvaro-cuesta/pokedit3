@@ -1,13 +1,12 @@
-module.exports.parse = (buffer, key, offset, count) ->
-  for i in [0...count]
-    id = buffer.readUInt16LE offset + 4 * i
-    break if id == 0x00  # Missing item = end of list
+{UInt16LE, ArrayOf, Obj, Transform, Filter} = require "#{__dirname}/byte-spec"
 
-    id: id
-    qty: key ^ buffer.readUInt16LE offset + 4 * i + 2
+module.exports = (size, key = 0) -> Filter ((v) -> v.id != 0), ArrayOf size, Obj [
+  {id: UInt16LE}
+  {qty: Transform UInt16LE, (v) -> v ^ (key & 0xFFFF)}
+]
 
-module.exports.NAMES = NAMES = [
-  'Nothing'
+module.exports.NAMES = [
+  undefined
   'Master Ball'
   'Ultra Ball'
   'Great Ball'
