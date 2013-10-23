@@ -1,12 +1,24 @@
 - if (pokemon)
   li.pokemon
-    ul
+    ul.main
       li
-        span.name= pokemon.name
+        span.name= pokemon.nickname
+        span.marks
+          - var circleClass = pokemon.mark.circle ? 'active' : ''
+          span.circle(class=circleClass) ●
+          - var squareClass = pokemon.mark.square ? 'active' : ''
+          span.square(class=squareClass) ■
+          - var triangleClass = pokemon.mark.triangle ? 'active' : ''
+          span.triangle(class=triangleClass) ▲
+          - var heartClass = pokemon.mark.heart ? 'active' : ''
+          span.heart(class=heartClass) ❤
       li
         span.trainer
           | #{pokemon.otName} (#{padLeft((pokemon.otId & 0xFFFF), 5)}#{'m' === 'm' ? '♂' : '♀'})
           span.language #{pokedit.Pokemon.LANGUAGES[pokemon.language]}
-      |= JSON.stringify(pokemon)
+      li.personality #{pokemon.personality}
+    ul.extended
+      li= JSON.stringify(pokemon)
 - else
   li.pokemon.empty
+    EMPTY

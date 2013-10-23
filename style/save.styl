@@ -1,16 +1,44 @@
 .item
   display inline-block
-  padding 1px 3px
-  margin 1px 3px
-  border 1px solid BLACK
-  width 20%
+  padding 2px 5px
+  margin 3px 5px
+  // border 1px solid BLACK
+  width 15%
+  box-shadow: 0 0 10px 0px #333333
+  // background-color LIGHTBLUE
+
 
 .pokemon
+  height 100px
   display inline-block
-  padding 1px 3px
+  padding 2px 5px
+  margin 5px 8px
   border 1px solid BLACK
-  width 20%
-  overflow scroll
-  &.empty
-     height 0
+  width 30%
+  overflow auto
   list-style none
+/*  background-color LIGHTBLUE
+  border: 5px #80d9ff
+  border-radius: 5px
+  box-shadow: 0 0 20px 0px #000000*/
+
+.marks > span
+  opacity(0.5)
+
+.marks > .circle
+  font-size: 140%
+  margin-right: 2px
+
+.marks > .square
+  font-size: 140%
+
+.marks > .triangle
+  font-size: 120%
+
+.marks > .active
+  opacity(1.0)
+
+li.item > .label
+  width 30px
+  margin-top 2px
+  margin-right 5px

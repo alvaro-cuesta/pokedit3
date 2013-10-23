@@ -9,6 +9,12 @@ animation()
 transition()
   vendor(transition, arguments)
 
+box-shadow()
+  vendor(box-shadow, arguments)
+
+border-radius()
+  vendor(border-radius, arguments)
+
 opacity(n)
   opacity n
   filter unquote('progid:DXImageTransform.Microsoft.Alpha(Opacity=' + round(n * 100) + ')')
@@ -21,13 +27,13 @@ RED = #c33
 WHITE = #fff
 BLACK = #000
 
-body
-  padding-top 30px
+//body
+//  padding-top 30px
 
 // Vertical spacers
 for space in 5 10 15 20 25 30 35 40 45 50 100
   .spacer{space}
-    height 10px * space
+    height 1px * space
     width 100%
     font-size 0
     margin 0
@@ -52,6 +58,9 @@ for space in 5 10 15 20 25 30 35 40 45 50 100
       opacity 1.0
 a:hover + .extended
   opacity 1.0
+
+.page-header
+  margin-top: 0px
 
 @import 'navbar'
 @import 'save'

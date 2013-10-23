@@ -2,7 +2,7 @@ function itemList(list)
   ul
     foreach list as item
       li.item
-        span.qty #{item.qty}
+        span.pull-left.label.label-primary #{item.qty}
         span.name #{pokedit.Items.NAMES[item.id]}
 
 function formatTrainer(trainer)
@@ -14,11 +14,6 @@ include 'layout'
 render title(save.common.name + ' (Save ' + save.number + ', ' + pokedit.save.GAME_SHORTNAMES[save.common.code] + ')')
 
 replace content
-  .page-header
-    h1
-      call formatTrainer(save.common)
-      |  - Save #{save.number} [#{pokedit.save.GAME_NAMES[save.common.code]}]
-
   .container.error
     foreach warnings as warning
       div.alert.alert-warning
@@ -34,45 +29,67 @@ replace content
         |= info
 
   ul.nav.nav-pills
+    li.pull-left
+      call formatTrainer(save.common)
+      |  - Save #{save.number} [#{pokedit.save.GAME_NAMES[save.common.code]}]
     li.active
       a(href='#trainer', data-toggle='tab') Trainer
     li
-      a(href='#bag', data-toggle='tab') Bag
+      a(href='#items', data-toggle='tab') Bag
     li
       a(href='#pc', data-toggle='tab') PC
     li.pull-right
-      a Testing.
-
+      a(href='download?PLACEHOLDER')
+        i.icon-download-alt
+    li.pull-right
+      a(href='edit')
+        i.icon-edit
   .tab-content
-    #trainer.tab-pane.active
+    #trainer.tab-pane.fade.active.in
+      .spacer20
       .row
         .col-md-3
-          h2 Trainer
-          ul
-            li Money: #{save.team_items.money}
-            li Time played: #{save.common.time.hours}:#{save.common.time.minutes}:#{save.common.time.seconds}.#{save.common.time.frames}
-            li Rival's name: #{save.rival.name}
+          .panel.panel-primary
+            .panel-heading
+              h2.panel-title Trainer
+            .panel-body
+              ul
+                li Money: #{save.team_items.money}
+                li Time played: #{save.common.time.hours}:#{save.common.time.minutes}:#{save.common.time.seconds}.#{save.common.time.frames}
+                li Rival's name: #{save.rival.name}
         .col-md-9
-          h2 Team
-          ol
-            foreach save.team_items.team as pokemon
-              include 'pokemon' exposing pokemon, padLeft, pokedit
-    #bag.tab-pane
-      h2 Items
-      call itemList(save.team_items.pocket)
-      h3 Key Items
-      call itemList(save.team_items.key)
-      h4 TM/HM case
-      ul
-      call itemList(save.team_items.tmhm)
-      h4 Berries
-      call itemList(save.team_items.berry)
-      h3 Balls
-      call itemList(save.team_items.ball)
-    #pc.tab-pane
-      h2 Your PC (objects)
-      call itemList(save.team_items.pc)
-      h2 Bill's PC (pokémon, current box: #{save.pc.current})
+          .panel.panel-primary
+            .panel-heading
+              h2.panel-title Team
+            .panel-body
+              foreach save.team_items.team as pokemon
+                include 'pokemon' exposing pokemon, padLeft, pokedit
+    #items.tab-pane.fade
+      .spacer20
+      .panel.panel-primary
+        .panel-heading
+          h2.panel-title Pocket
+        .panel-body
+          call itemList(save.team_items.pocket)
+          h3 Balls
+          call itemList(save.team_items.ball)
+      .panel.panel-primary
+        .panel-heading
+          h2.panel-title Key Items
+        .panel-body
+          call itemList(save.team_items.key)
+          h3 TM/HM case
+          ul
+          call itemList(save.team_items.tmhm)
+          h3 Berries
+          call itemList(save.team_items.berry)
+      .panel.panel-primary
+        .panel-heading
+          h2.panel-title PC
+        .panel-body
+          call itemList(save.team_items.pc)
+    #pc.tab-pane.fade
+      .spacer20
       ol
         foreach save.pc.boxes as box
           li
@@ -80,3 +97,4 @@ replace content
               - for (i = 0; i < box.length; i++)
                 - var pokemon = box[i]
                   include 'pokemon' exposing pokemon, padLeft, pokedit
+  .spacer50

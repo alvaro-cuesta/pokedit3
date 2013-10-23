@@ -81,7 +81,7 @@ SpecPokemon = ->
     {personality: wrap.capture UInt32LE}
     {otId: wrap.capture UInt32LE}
     {nickname: PokemonString 10}
-    {language: UInt16LE}
+    {language: Transform UInt16LE, (l) -> l - 0x201}
     {otName: PokemonString 7}
     {mark: UInt8} # TODO: BITS!
     {checksum: UInt16LE}

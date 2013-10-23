@@ -11,6 +11,9 @@ PUB = "#{__dirname}/../static"
 DEV = process.env.NODE_ENV == 'development'
 TMP = "#{process.env.TMP || process.env.TMPDIR || process.env.TEMP || '/tmp' || process.cwd()}/pokedit3saves"
 
+if not fs.existsSync TMP
+  fs.mkdirSync TMP, 0o744
+
 
 
 ## Utilities ##
